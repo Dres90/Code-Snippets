@@ -12,7 +12,7 @@ def sendMail():
     message = Mail(
         from_email=os.getenv('from_email'),
         to_emails=os.getenv('to_emails'),
-        subject=f'{os.getenv('url')} is up!',
+        subject=f'{os.getenv("url")} is up!',
         html_content='<strong>Notification success!</strong>')
     try:
         sg = SendGridAPIClient(os.getenv('SENDGRID_API_KEY'))
