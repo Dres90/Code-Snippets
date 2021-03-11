@@ -19,7 +19,12 @@ def sendMail(link):
     except Exception as e:
         print('Error sending mail')
 
-driver = webdriver.Firefox()
+def createHeadlessFirefoxBrowser():
+     options = webdriver.FirefoxOptions()
+     options.add_argument('--headless')
+     return webdriver.Firefox(options=options)
+
+driver = createHeadlessFirefoxBrowser()
 links = os.getenv('links').split(";")
 amazon = AmazonChecker(driver)
 for link in links:
