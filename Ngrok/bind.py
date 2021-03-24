@@ -56,7 +56,6 @@ def sameTunnels(tunnels, newTunnels):
 result = getTunnels()
 updateTunnels(result)
 while True:
-    print('%s Checking Status'%datetime.datetime.now())
     sleep(timer)
     newresult = getTunnels()
     if not sameTunnels(result, newresult):
