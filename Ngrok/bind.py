@@ -33,7 +33,7 @@ def updateTunnels(result):
     linksResult = r.json()
     for tunnel in result["tunnels"]:
         link = next ((i for i in linksResult["items"] if i["fields"]["id"]["en-US"] == tunnel["name"]), None)
-        if link != None:
+        if link != None and link["fields"]["url"]["en-US"] != tunnel["public_url"]:
             patchEndpoint = f'https://api.contentful.com/spaces/{spaceId}/entries/{link["sys"]["id"]}'
             patch = f'[{{"op": "replace", "path": "/fields/url/en-US", "value": "{tunnel["public_url"]}"}}]'
             patchHeaders = {"Authorization": f"Bearer {token}", "Content-type": "application/json-patch+json", "X-Contentful-Version": f'{link["sys"]["version"]}'}
