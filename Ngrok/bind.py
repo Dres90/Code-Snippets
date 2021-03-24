@@ -2,6 +2,7 @@ import requests
 import json
 import os
 from time import sleep
+import datetime
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -10,7 +11,7 @@ result = None
 while result is None:
     try:
         tunnels = os.getenv('tunnels')
-        print('Trying %s'%tunnels)
+        print('%s Trying %s'%(datetime.datetime.now(), tunnels))
         t = requests.get(tunnels)
         result = t.json()
     except:
