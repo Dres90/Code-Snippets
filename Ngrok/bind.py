@@ -6,23 +6,25 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-
-t = requests.get(os.getenv('tunnels'))
-result = t.json()
+result = None
+while result is None:
+    try:
+        tunnels = os.getenv('tunnels')
+        print('Trying %s'%tunnels)
+        t = requests.get(tunnels)
+        result = t.json()
+    except:
+        print('Waiting')
+        sleep(10)
+        pass
 
 spaceId = os.getenv('spaceid')
 token = os.getenv('token')
 
 linksEndpoint = f"https://api.contentful.com/spaces/{spaceId}/entries?content_type=privateLink"
 headers = {"Authorization": f"Bearer {token}"}
-linkResult = None
-while linkResult is None:
-    try:
-        r = requests.get(linksEndpoint, headers=headers)
-        linksResult = r.json()
-    except:
-        sleep(10)
-        pass
+r = requests.get(linksEndpoint, headers=headers)
+linksResult = r.json()
 for tunnel in result["tunnels"]:
     link = next ((i for i in linksResult["items"] if i["fields"]["id"]["en-US"] == tunnel["name"]), None)
     if link != None:
