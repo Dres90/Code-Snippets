@@ -2,7 +2,6 @@ import requests
 import json
 import os
 from time import sleep
-import datetime
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -13,7 +12,7 @@ def getTunnels():
     while result is None:
         try:
             tunnels = os.getenv('tunnels')
-            print('%s Trying %s'%(datetime.datetime.now(), tunnels))
+            print('Trying %s'%(tunnels))
             t = requests.get(tunnels)
             result = t.json()
         except:
@@ -23,7 +22,7 @@ def getTunnels():
     return result
 
 def updateTunnels(result):
-    print('%s Updating Tunnels'%datetime.datetime.now())
+    print('Updating Tunnels')
     spaceId = os.getenv('spaceid')
     token = os.getenv('token')
 
