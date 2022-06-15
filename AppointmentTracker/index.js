@@ -1,6 +1,7 @@
 import axios from 'axios';
 import 'dotenv/config';
 import nodemailer from 'nodemailer';
+import { DateTime } from 'luxon';
 
 axios.defaults.headers.common['x-troov-web'] = 'com.troov.web';
 
@@ -17,27 +18,56 @@ const connect = async () => {
         },
     });
 
-    transporter.verify(function (error, success) {
-    if (error) {
-        console.log(error);
-        return null;
-    } else {
-        console.log("Server is ready to take our messages");
-    }
+    transporter.verify(function (error) {
+        if (error) {
+            console.log(error);
+            return null;
+        }
     });
     return transporter;
 }
 
-const getMessage = (target) => {
-    return {
+const sendMail = async (subject, message) => {
+    const data = {
         from: process.env.SMTP_EMAIL,
         to: process.env.TO_EMAIL,
-        subject: "Date is no longer available",
-        text: `The target ${target} date is no longer available! Time: ${new Date().toISOString()}`
+        subject: subject,
+        text: message
     };
+    let transporter = await connect();
+    if (transporter) {
+        await transporter.sendMail(data);
+    }
 }
 
-try {
+const cleanDate = (date) => date.toISO().slice(0, -10);
+
+const checkCanRegister = async () => {
+    const targetDate = DateTime.fromISO(process.env.TARGET, {zone: 'America/Guayaquil'});
+    const startDate = DateTime.now().setZone('America/Guayaquil');
+    const endDate = startDate.plus({days: 33});
+    if (targetDate < startDate || targetDate > endDate) {
+        console.log('Date outside margin');
+        return;
+    };
+    const payload = {
+        "start": cleanDate(startDate),
+        "end": cleanDate(endDate),
+        "session": {
+            [process.env.SESSION]: 1
+        }
+    };
+    const resp = await axios.post(api, payload);
+    const dates = new Set(resp.data);
+    if (!dates.has(process.env.TARGET)) {
+        sendMail("Register - Date is available!", `Run! ${process.env.TARGET} should be available! https://consulat.gouv.fr/ambassade-de-france-a-quito/rendez-vous?name=Visa`);
+    }
+    else {
+        sendMail("Register - Date is not available!", "You have been scammed, date was not available");
+    }
+}
+
+const checkIfDateStillAvaialable = async () => {
     const payload = {
         "start": process.env.START,
         "end": process.env.END,
@@ -49,14 +79,16 @@ try {
     const dates = new Set(resp.data);
     if (dates.has(process.env.TARGET)) {
         console.log(`${'Date is no longer available!'}`);
-        let transporter = await connect();
-        if (transporter) {
-            transporter.sendMail(getMessage(process.env.TARGET));
-        }
+        sendMail('Check - Date is no longer available', 'Date has been added to exclude dates');
     }
     else {
         console.log(`${'Date is still available'}`)
     }
+}
+
+try {
+    await checkIfDateStillAvaialable();
+    await checkCanRegister();
 }
 catch (error) {
     console.error(error);
