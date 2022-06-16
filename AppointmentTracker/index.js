@@ -28,28 +28,31 @@ const connect = async () => {
 }
 
 const sendMail = async (subject, message) => {
-    const data = {
-        from: process.env.SMTP_EMAIL,
-        to: process.env.TO_EMAIL,
-        subject: subject,
-        text: message
-    };
-    let transporter = await connect();
-    if (transporter) {
-        await transporter.sendMail(data);
+    try {
+        const data = {
+            from: process.env.SMTP_EMAIL,
+            to: process.env.TO_EMAIL,
+            subject: subject,
+            text: message
+        };
+        let transporter = await connect();
+        if (transporter) {
+            await transporter.sendMail(data);
+        }
+        else {
+            console.log('SMTP Error');    
+        }
+    }
+    catch (error) {
+        console.log('Mail failed to send');
     }
 }
 
 const cleanDate = (date) => date.toISO().slice(0, -10);
 
 const checkCanRegister = async () => {
-    const targetDate = DateTime.fromISO(process.env.TARGET, {zone: 'America/Guayaquil'});
     const startDate = DateTime.now().setZone('America/Guayaquil');
     const endDate = startDate.plus({days: 33});
-    if (targetDate < startDate || targetDate > endDate) {
-        console.log('Date outside margin');
-        return;
-    };
     const payload = {
         "start": cleanDate(startDate),
         "end": cleanDate(endDate),
@@ -59,12 +62,18 @@ const checkCanRegister = async () => {
     };
     const resp = await axios.post(api, payload);
     const dates = new Set(resp.data);
-    if (!dates.has(process.env.TARGET)) {
-        sendMail("Register - Date is available!", `Run! ${process.env.TARGET} should be available! https://consulat.gouv.fr/ambassade-de-france-a-quito/rendez-vous?name=Visa`);
+    let today = startDate;
+
+    while  (today <= endDate) {
+        let todayString = today.toISODate();
+        if (!dates.has(todayString)) {
+            sendMail("Register - Date is available!", `Run! ${todayString} should be available! https://consulat.gouv.fr/ambassade-de-france-a-quito/rendez-vous?name=Visa`);
+            console.log('Date found!', todayString);
+            return;
+        }
+        today = today.plus({days: 1});
     }
-    else {
-        sendMail("Register - Date is not available!", "You have been scammed, date was not available");
-    }
+    console.log('No available date found');
 }
 
 const checkIfDateStillAvaialable = async () => {
@@ -87,9 +96,10 @@ const checkIfDateStillAvaialable = async () => {
 }
 
 try {
-    await checkIfDateStillAvaialable();
+    //await checkIfDateStillAvaialable();
     await checkCanRegister();
 }
 catch (error) {
+    sendMail('Error', error.toString());
     console.error(error);
 }
