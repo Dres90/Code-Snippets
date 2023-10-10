@@ -1,0 +1,17 @@
+{
+  "name": "iphonetracker",
+  "version": "1.0.0",
+  "description": "Track Iphone Pickup Availability",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Dres90",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "dotenv": "^16.0.1",
+    "nodemailer": "^6.7.5"
+  }
+}
